@@ -1,0 +1,21 @@
+{
+    "study_id": "PACA-CA",
+    "analysis_id": [
+        "a094f44f-e40d-436f-ae96-c5a0a53dc183"
+    ],
+    "download_song_url": "https://song.cancercollaboratory.org",
+    "download_score_url": "https://storage.cancercollaboratory.org",
+    "upload_song_url": "https://song.azure-dev.overture.bio",
+    "upload_score_url": "https://score.azure-dev.overture.bio",
+    "max_retries": 2,
+    "first_retry_wait_time": 60,
+    "local_dir": "/tmp",
+    "cpus": 1,
+    "mem": 1,
+    "download_cpus": 10,
+    "download_mem": 20,
+    "download_transport_mem": 2,
+    "upload_cpus": 10,
+    "upload_mem": 20,
+    "upload_transport_mem": 2
+}
