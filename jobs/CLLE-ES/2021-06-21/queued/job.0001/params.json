@@ -1,0 +1,21 @@
+{
+    "study_id": "CLLE-ES",
+    "analysis_id": [
+        "e9fe340b-1b08-464d-bc2e-260c329a17ea"
+    ],
+    "download_song_url": "https://song.cancercollaboratory.org",
+    "download_score_url": "https://storage.cancercollaboratory.org",
+    "upload_song_url": "https://song.azure.icgc.overture.bio",
+    "upload_score_url": "https://score.azure.icgc.overture.bio",
+    "max_retries": 2,
+    "first_retry_wait_time": 60,
+    "local_dir": "/tmp",
+    "cpus": 1,
+    "mem": 1,
+    "download_cpus": 2,
+    "download_mem": 4,
+    "download_transport_mem": 2,
+    "upload_cpus": 2,
+    "upload_mem": 4,
+    "upload_transport_mem": 2
+}
