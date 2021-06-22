@@ -1,8 +1,10 @@
 {
     "study_id": "CLLE-ES",
     "analysis_id": [
-        "7febec4a-3c8b-49e2-ae5c-68147a7c79a5",
-        "b543c097-f4af-4823-af1c-d49d1dae86c0"
+        "02b981e3-4c91-4a33-b77e-a82dacad2553",
+        "2150a32c-ff9c-46dc-af5d-dbb917617007",
+        "9eadb99b-d8de-42c3-9dc7-abbcde54d74d",
+        "c21262cb-ecfe-4f74-84c3-0296fb7bb4e0"
     ],
     "download_song_url": "https://song.cancercollaboratory.org",
     "download_score_url": "https://storage.cancercollaboratory.org",
@@ -10,13 +12,13 @@
     "upload_score_url": "https://score.azure.icgc.overture.bio",
     "max_retries": 2,
     "first_retry_wait_time": 60,
-    "local_dir": "/tmp",
+    "local_dir": "/icgc-argo-scratch",
     "cpus": 1,
     "mem": 1,
-    "download_cpus": 4,
-    "download_mem": 8,
+    "download_cpus": 6,
+    "download_mem": 12,
     "download_transport_mem": 2,
-    "upload_cpus": 4,
-    "upload_mem": 8,
+    "upload_cpus": 6,
+    "upload_mem": 12,
     "upload_transport_mem": 2
 }
