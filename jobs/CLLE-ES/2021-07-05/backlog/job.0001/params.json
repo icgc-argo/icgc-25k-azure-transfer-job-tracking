@@ -1,0 +1,23 @@
+{
+  "_batch_id": "2021-07-05",
+  "_job_id": "job.0001",
+  "study_id": "CLLE-ES",
+  "analysis_id": [
+    "855434fa-c1cd-4a5a-a40e-e3fe0bb58348"
+  ],
+  "max_retries": 3,
+  "first_retry_wait_time": 60,
+  "cpus": 1,
+  "mem": 1,
+  "local_dir": "/icgc-argo-scratch",
+  "download_song_url": "https://song.cancercollaboratory.org",
+  "download_score_url": "https://storage.cancercollaboratory.org",
+  "download_cpus": 19,
+  "download_mem": 38,
+  "download_transport_mem": 2,
+  "upload_song_url": "https://song.azure-dev.overture.bio",
+  "upload_score_url": "https://score.azure-dev.overture.bio",
+  "upload_cpus": 19,
+  "upload_mem": 38,
+  "upload_transport_mem": 2
+}
