@@ -171,6 +171,7 @@ def main(study, job_count, config):
 
     # generate batch-summary.tsv
     batch_summary_f = open(os.path.join(new_batch_dir, 'batch-summary.tsv'), 'w')
+    batch_summary_f.write(f"# SONG analysis objects retrieved from payload dump: {os.path.basename(payload_dump)}\n")
     i = 0
     for job in new_jobs:
         i += 1
@@ -190,6 +191,8 @@ def main(study, job_count, config):
             j.write(json.dumps(job, indent=2))
 
     batch_summary_f.close()
+
+    print(f"Generated {len(new_jobs)} jobs in {new_batch_dir}")
 
 
 if __name__ == '__main__':
