@@ -58,11 +58,31 @@ def get_wes_token(env, config):
 
 
 def pull_job_batches(config):
-    print("'pull_job_batches' to be implemented")
+    cmd = 'git checkout main && git pull && git checkout scheduler && git merge main'
+
+    stdout, stderr, rc = run_cmd(cmd)
+    if rc:
+        error_msg = f"Failed to execute command: {cmd}\nStdout: {stdout}\nStderr: {stderr}\n"
+        print(error_msg, file=sys.stderr)
+        send_notification(error_msg, 'CRITICAL', config)
+        sys.exit(1)
 
 
 def push_job_status(config):
-    print("'push_job_status' to be implemented")
+    cmd = "git log --grep='^\\[scheduler\\]' --format='%at' -n1"
+    stdout, stderr, rc = run_cmd(cmd)
+    last_update_at = int(stdout) if stdout else 0
+    epoch_time_now = int(time.time())
+    if epoch_time_now - last_update_at < config['tracking_repo_push_interval'] * 60 * 60:
+        return
+
+    cmd = "git add . && git commit -m '[scheduler] update job status' && git push"
+
+    stdout, stderr, rc = run_cmd(cmd)
+    if rc:
+        error_msg = f"Failed to execute command: {cmd}\nStdout: {stdout}\nStderr: {stderr}\n"
+        print(error_msg, file=sys.stderr)
+        send_notification(error_msg, 'CRITICAL', config)
 
 
 @retry(reraise=True, wait=wait_exponential(multiplier=1, min=10, max=60), stop=stop_after_attempt(1))
@@ -276,6 +296,9 @@ def main(studies, config):
 
 
 if __name__ == '__main__':
+    # make sure cwd is BASE_DIR
+    os.chdir(BASE_DIR)
+
     parser = argparse.ArgumentParser(description='ICGC 25k data Azure transfer job generator')
     parser.add_argument('-s', '--studies', type=str, nargs='+',
                         help='SONG studies for preferred priority order')
