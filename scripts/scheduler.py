@@ -111,7 +111,7 @@ def get_run_state(graphql_url, run_id, wes_token):
         raise Exception(f"Unable to retrieve run state for {run_id} from {graphql_url}")
 
     response_obj = json.loads(response.text)
-    return response_obj['data']['runs'][0]
+    return response_obj['data']['runs']['content'][0]
 
 
 def move_job_to_new_state(new_state, job_batch_path, current_job_path):
@@ -125,10 +125,10 @@ def move_job_to_new_state(new_state, job_batch_path, current_job_path):
 
 
 def update_queued_jobs(env, config, wes_token):
-    queued_run_path = os.path.join(JOB_DIR, '*', '*', 'queued', 'job.*', f'run.*.{env}.wes-*.*')
+    queued_run_path = os.path.join(JOB_DIR, '*', '*', 'queued', 'job.*', f'run.*.{env}.wes-*')
     queued_runs = sorted(glob(queued_run_path))
     for run in queued_runs:
-        study, batch_id, _, job_id, run_info = run.split(os.sep)[-4:]
+        study, batch_id, _, job_id, run_info = run.split(os.sep)[-5:]
         run_id = run_info.split('.')[3]
 
         job_batch_path = os.path.join(JOB_DIR, study, batch_id)
