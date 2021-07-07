@@ -15,8 +15,8 @@
   "download_cpus": 1,
   "download_mem": 2,
   "download_transport_mem": 2,
-  "upload_song_url": "https://song.azure-dev.overture.bio",
-  "upload_score_url": "https://score.azure-dev.overture.bio",
+  "upload_song_url": "https://song.azure.icgc.overture.bio",
+  "upload_score_url": "https://score.azure.icgc.overture.bio",
   "upload_cpus": 1,
   "upload_mem": 2,
   "upload_transport_mem": 2
