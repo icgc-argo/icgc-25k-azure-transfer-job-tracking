@@ -81,8 +81,8 @@ def create_new_job(study, analysis_ids):
     if down_up_cpus < 1:
         down_up_cpus = 1
 
-    if down_up_cpus > 19:
-        down_up_cpus = 19
+    if down_up_cpus > 8:
+        down_up_cpus = 8
 
     new_job = JOB_PARAMS.copy()
     new_job.update({
