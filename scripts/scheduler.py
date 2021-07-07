@@ -76,6 +76,10 @@ def push_job_status(config):
     if epoch_time_now - last_update_at < config['tracking_repo_push_interval'] * 60 * 60:
         return
 
+    stdout, stderr, rc = run_cmd("git status")
+    if 'working tree clean' in stdout:  # nothing to commit
+        return
+
     cmd = "git add . && git commit -m '[scheduler] update job status' && git push"
 
     stdout, stderr, rc = run_cmd(cmd)
