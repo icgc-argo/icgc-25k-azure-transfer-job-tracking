@@ -129,7 +129,7 @@ def update_queued_jobs(env, config, wes_token):
     queued_runs = sorted(glob(queued_run_path))
     for run in queued_runs:
         study, batch_id, _, job_id, run_info = run.split(os.sep)[-4:]
-        _, queued_time, _, run_id, session_id = run_info.split('.')
+        run_id = run_info.split('.')[3]
 
         job_batch_path = os.path.join(JOB_DIR, study, batch_id)
         current_job_path = os.path.dirname(run)
