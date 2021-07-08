@@ -44,7 +44,7 @@ def run_cmd(cmd):
     )
 
 
-@retry(reraise=True, wait=wait_exponential(multiplier=1, min=10, max=60), stop=stop_after_attempt(1))
+@retry(reraise=True, wait=wait_exponential(multiplier=1, min=20, max=80), stop=stop_after_attempt(4))
 def get_wes_token(env, config):
     token_url = config['compute_environments'][env]['token_url']
     client_id = os.environ.get(config['compute_environments'][env]['ENV']['client_id'])
@@ -120,7 +120,7 @@ def push_job_status(config):
         send_notification(error_msg, 'CRITICAL', config)
 
 
-@retry(reraise=True, wait=wait_exponential(multiplier=1, min=10, max=60), stop=stop_after_attempt(1))
+@retry(reraise=True, wait=wait_exponential(multiplier=1, min=20, max=80), stop=stop_after_attempt(4))
 def get_run_state(graphql_url, run_id, wes_token):
     graphql_query = {
         "operationName": "SINGLE_RUN_QUERY",
@@ -226,7 +226,7 @@ def get_studies_in_priority_order(studies):
     return studies_in_priority_order
 
 
-@retry(reraise=True, wait=wait_exponential(multiplier=1, min=10, max=60), stop=stop_after_attempt(1))
+@retry(reraise=True, wait=wait_exponential(multiplier=1, min=20, max=80), stop=stop_after_attempt(4))
 def wes_submit_run(params, wes_url, wes_token, api_token, resume, workflow_url, workflow_version, nfs):
     # TODO: support resume request
 
