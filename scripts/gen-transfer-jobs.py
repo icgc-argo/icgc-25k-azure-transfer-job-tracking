@@ -193,7 +193,8 @@ def main(study, job_count, config):
 
     batch_summary_f.close()
 
-    print(f"Generated {len(new_jobs)} jobs in {new_batch_dir}")
+    print(f"Generated {len(new_jobs)} jobs in {new_batch_dir}\n"
+          "After verification of the new jobs, please remember git add, commit and push")
 
 
 if __name__ == '__main__':
