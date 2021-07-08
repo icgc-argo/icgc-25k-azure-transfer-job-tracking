@@ -35,7 +35,8 @@ JOB_PARAMS = {
     "upload_score_url": "https://score.azure.icgc.overture.bio",
     "upload_cpus": 1,
     "upload_mem": 2,
-    "upload_transport_mem": 2
+    "upload_transport_mem": 2,
+    "transport_mem": 2
 }
 
 
