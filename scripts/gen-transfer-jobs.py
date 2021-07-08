@@ -217,7 +217,7 @@ if __name__ == '__main__':
                  f"greater than {config['max_jobs_per_batch']}: {args.job_count} specified")
 
     # make sure to merge scheduler branch into main branch before generating any new jobs
-    cmd = 'git checkout scheduler && git pull && git checkout main && git merge scheduler'
+    cmd = 'git checkout scheduler && git pull && git checkout main && git merge scheduler -m "merge scheduler"'
     proc = subprocess.Popen(
                 cmd,
                 shell=True,
