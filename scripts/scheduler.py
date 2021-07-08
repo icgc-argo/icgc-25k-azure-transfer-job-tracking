@@ -143,9 +143,9 @@ def move_job_to_new_state(new_state, job_batch_path, current_job_path):
     cmd = f'git mv {current_job_path} {new_job_path}'
     stdout, stderr, returncode = run_cmd(cmd)
     if returncode:
-        pass
+        print(f"Unable to perform: {cmd}", file=sys.stderr)
     else:
-        print(f"Job status change, new state: {new_state}, job: {new_job_path}")
+        print(f"Job status change, new state: {new_state}, job: {new_job_path}/{os.path.basename(current_job_path)}")
 
 
 def update_queued_jobs(env, config, wes_token):
