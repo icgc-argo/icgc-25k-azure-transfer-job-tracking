@@ -291,12 +291,12 @@ def send_notification(message, level, config):
 
 
 def main(studies, config):
-    pull_job_batches(config['job_tracking_repo'])
+    pull_job_batches(config)
 
     for env in config['compute_environments']:
         schedule_jobs(env, config, studies)
 
-    push_job_status(config['job_tracking_repo'])
+    push_job_status(config)
 
 
 if __name__ == '__main__':
