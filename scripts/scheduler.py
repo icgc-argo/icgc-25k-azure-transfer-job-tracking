@@ -75,7 +75,7 @@ def pull_job_batches(config):
     # this is clunky, better alternative would be to make API calls against GitHub to get log info
     cmd = "git stash > /dev/null 2>&1 && git checkout main > /dev/null 2>&1 && " + \
           "git pull > /dev/null 2>&1 && git log --grep='^\\[scheduler\\]' --format='%at' -n1 && " + \
-          "git checkout scheduler > /dev/null 2>&1 && git stash pop > /dev/null 2>&1 && git add . > /dev/null 2>&1"
+          "git checkout scheduler > /dev/null 2>&1 && ( git stash pop > /dev/null 2>&1 || true ) && git add . > /dev/null 2>&1"
     stdout, stderr, rc = run_cmd(cmd)
     if rc:  # when error out, no need to continue
         print("Skip sync with main branch. Unable to retieve commit log for last job status update on the main branch", file=sys.stderr)
