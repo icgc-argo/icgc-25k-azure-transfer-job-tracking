@@ -9,6 +9,7 @@ import random
 import requests
 import argparse
 import subprocess
+import datetime
 from glob import glob
 from tenacity import retry, wait_exponential, stop_after_attempt
 from oauthlib.oauth2 import BackendApplicationClient
@@ -31,6 +32,10 @@ def run_cmd(cmd):
                 stderr=subprocess.PIPE
             )
     stdout, stderr = proc.communicate()
+
+    if proc.returncode:
+        error_msg = f"Error: failed to perform command: {cmd}"
+        print(error_msg, file=sys.stderr)
 
     return (
         stdout.decode("utf-8").strip(),
@@ -58,6 +63,32 @@ def get_wes_token(env, config):
 
 
 def pull_job_batches(config):
+    # need to add a condition here: only when the last commit on the scheduler branch
+    # appeared on the main branch, it's safe to proceed with merging main into scheduler branch
+    cmd = "git checkout scheduler > /dev/null 2>&1 && git log --grep='^\\[scheduler\\]' --format='%at' -n1"
+    stdout, stderr, rc = run_cmd(cmd)
+    if rc:  # when error out, no need to continue
+        print("Skip sync with main branch. Unable to retieve commit log for last job status update on the scheduler branch", file=sys.stderr)
+        return
+    scheduler_last_update_at = int(stdout) if stdout else 0
+
+    # this is clunky, better alternative would be to make API calls against GitHub to get log info
+    cmd = "git stash > /dev/null 2>&1 && git checkout main > /dev/null 2>&1 && " + \
+          "git pull > /dev/null 2>&1 && git log --grep='^\\[scheduler\\]' --format='%at' -n1 && " + \
+          "git checkout scheduler > /dev/null 2>&1 && git stash pop > /dev/null 2>&1 && git add . > /dev/null 2>&1"
+    stdout, stderr, rc = run_cmd(cmd)
+    if rc:  # when error out, no need to continue
+        print("Skip sync with main branch. Unable to retieve commit log for last job status update on the main branch", file=sys.stderr)
+        return
+    main_last_update_at = int(stdout) if stdout else 0
+
+    if main_last_update_at != scheduler_last_update_at:
+        main_update_at_str = datetime.datetime.fromtimestamp(main_last_update_at).strftime('%Y-%m-%d %H:%M:%S')
+        scheduler_update_at_str = datetime.datetime.fromtimestamp(scheduler_last_update_at).strftime('%Y-%m-%d %H:%M:%S')
+        print(f"Skip sync with main branch. The last scheduler status update at {scheduler_update_at_str} has not "
+              f"been merged into main branch, whose last job status update was at {main_update_at_str}")
+        return
+
     cmd = 'git checkout main && git pull && git checkout scheduler && git merge main'
 
     stdout, stderr, rc = run_cmd(cmd)
