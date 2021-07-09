@@ -97,6 +97,8 @@ def pull_job_batches(config):
         print(error_msg, file=sys.stderr)
         send_notification(error_msg, 'CRITICAL', config)
         sys.exit(1)
+    else:
+        print("Pulled and merged updates from main branch to scheduler branch.")
 
 
 def push_job_status(config):
@@ -118,6 +120,8 @@ def push_job_status(config):
         error_msg = f"Failed to execute command: {cmd}\nStdout: {stdout}\nStderr: {stderr}\n"
         print(error_msg, file=sys.stderr)
         send_notification(error_msg, 'CRITICAL', config)
+    else:
+        print("Pushed latest job status on the scheduler branch.")
 
 
 @retry(reraise=True, wait=wait_exponential(multiplier=1, min=20, max=80), stop=stop_after_attempt(4))
