@@ -231,4 +231,8 @@ if __name__ == '__main__':
         sys.exit(f"Unable to merge latest scheduler branch into main. Failed command: '{cmd}'.\n"
                  f"STDOUT: {stdout.decode('utf-8')}\nSTDERR: {stderr.decode('utf-8')}")
 
+    if args.job_count == 0:
+        print("Job count was set to 0, stop here.")
+        sys.exit()
+
     main(args.study, args.job_count, config)

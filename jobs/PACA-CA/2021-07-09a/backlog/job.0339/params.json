@@ -1,0 +1,24 @@
+{
+  "_batch_id": "2021-07-09a",
+  "_job_id": "job.0339",
+  "study_id": "PACA-CA",
+  "analysis_id": [
+    "5c3a6304-f683-4d89-b929-1ec97831b5b2"
+  ],
+  "max_retries": 3,
+  "first_retry_wait_time": 60,
+  "cpus": 1,
+  "mem": 1,
+  "local_dir": "/icgc-argo-scratch",
+  "download_song_url": "https://song.cancercollaboratory.org",
+  "download_score_url": "https://storage.cancercollaboratory.org",
+  "download_cpus": 4,
+  "download_mem": 8,
+  "download_transport_mem": 2,
+  "upload_song_url": "https://song.azure.icgc.overture.bio",
+  "upload_score_url": "https://score.azure.icgc.overture.bio",
+  "upload_cpus": 4,
+  "upload_mem": 8,
+  "upload_transport_mem": 2,
+  "transport_mem": 2
+}
