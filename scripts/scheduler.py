@@ -209,7 +209,7 @@ def update_queued_jobs(env, config, wes_token):
         if new_state in ('completed', 'failed'):
             move_job_to_new_state(new_state, job_batch_path, current_job_path)
 
-    return len(glob(queued_run_path))
+    return len(set([os.path.dirname(r) for r in glob(queued_run_path)]))
 
 
 def get_studies_in_priority_order(studies):
