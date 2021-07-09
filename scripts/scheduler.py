@@ -182,7 +182,12 @@ def move_job_to_new_state(new_state, job_batch_path, current_job_path):
 def update_queued_jobs(env, config, wes_token):
     queued_run_path = os.path.join(JOB_DIR, '*', '*', 'queued', 'job.*', f'run.*.{env}.wes-*')
     queued_runs = sorted(glob(queued_run_path))
+    latest_run_per_job = dict()
     for run in queued_runs:
+        job_id = os.path.basename(os.path.dirname(run))
+        latest_run_per_job[job_id] = run
+
+    for run in list(latest_run_per_job.values()):
         study, batch_id, _, job_id, run_info = run.split(os.sep)[-5:]
         run_id = run_info.split('.')[3]
 
