@@ -380,7 +380,7 @@ def excessive_failure(env, config):
         if 'failed' in run_path:
             recently_failed_runs.append(run_path.split('.')[-1])
 
-    if len(recently_failed_runs) >= config['compute_environments:'][env]['excessive_failure_threshold']:
+    if len(recently_failed_runs) >= config['compute_environments'][env]['excessive_failure_threshold']:
         with open(os.path.join(JOB_DIR, flag_file), 'w') as f:
             f.write(
                 f"recently_failed_runs: [{', '.join(recently_failed_runs)}]\n"
