@@ -109,7 +109,7 @@ def get_job_status_summary():
     job_status_changes = stdout.split('\n') if stdout else []
 
     report_summary_lines = job_status_changes
-    changed_studies = {}
+    changed_studies = set([])
     for change in job_status_changes:
         changed_studies.add(change.split(' ')[0])
 
@@ -118,7 +118,7 @@ def get_job_status_summary():
         stdout, stderr, rc = run_cmd(cmd)
         report_summary_lines += stdout.split('\n') if stdout else []
 
-    return "\n".join(report_summary_lines)
+    return "```\n" + "\n".join(report_summary_lines) + "\n```"
 
 
 def push_job_status(config):
