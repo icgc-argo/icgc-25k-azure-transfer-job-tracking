@@ -49,7 +49,7 @@ Within 'jobs' direcotry, do this to report job status periodically:
 for s in *-*;
 do
   for f in `echo backlog queued failed completed`;
-    do echo -n "$s $f "; ls $s/*/$f/*/params.json |wc -l |sed 's/ //g';
+    do echo -n "$s $f "; ls $s/*/$f/*/params.json 2>/dev/null |wc -l |sed 's/ //g';
   done;
 done
 ```

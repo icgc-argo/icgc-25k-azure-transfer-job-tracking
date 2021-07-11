@@ -11,7 +11,7 @@ import argparse
 import subprocess
 import datetime
 from glob import glob
-from tenacity import retry, wait_exponential, stop_after_attempt
+from tenacity import retry, wait_random, stop_after_attempt
 from oauthlib.oauth2 import BackendApplicationClient
 from requests_oauthlib import OAuth2Session
 
@@ -44,7 +44,7 @@ def run_cmd(cmd):
     )
 
 
-@retry(reraise=True, wait=wait_exponential(multiplier=1, min=20, max=80), stop=stop_after_attempt(4))
+@retry(reraise=True, wait=wait_random(min=5, max=15), stop=stop_after_attempt(3))
 def get_wes_token(env, config):
     token_url = config['compute_environments'][env]['token_url']
     client_id = os.environ.get(config['compute_environments'][env]['ENV']['client_id'])
@@ -101,17 +101,52 @@ def pull_job_batches(config):
         print("Pulled and merged updates from main branch to scheduler branch.")
 
 
+def get_job_status_summary():
+    report_summary_lines = []
+
+    cmd = "git status jobs |grep renamed |grep 'params.json' |awk -F'/' '{print $2\" \"$4\"->\"$9}' |sort |uniq -c |awk '{print $2\" \"$3\" \"$1}'"
+    stdout, stderr, rc = run_cmd(cmd)
+    job_status_changes = stdout.split('\n') if stdout else []
+
+    report_summary_lines = job_status_changes
+    changed_studies = {}
+    for change in job_status_changes:
+        changed_studies.add(change.split(' ')[0])
+
+    for s in changed_studies:
+        cmd = "ls -d jobs/%s/*/*/job.* |awk -F'/' '{print $2\" \"$4}' |sort |uniq -c |awk '{print $2\" \"$3\" \"$1}'" % s
+        stdout, stderr, rc = run_cmd(cmd)
+        report_summary_lines += stdout.split('\n') if stdout else []
+
+    return "\n".join(report_summary_lines)
+
+
 def push_job_status(config):
+    # detect whether new excessive failure flag file created
+    new_excessive_run_failure = False
+    cmd = "git add . && git status jobs | grep 'new file' | grep excessive_failure"
+    stdout, stderr, rc = run_cmd(cmd)
+    if 'excessive_failure' in stdout:
+        new_excessive_run_failure = True
+
     cmd = "git log --grep='^\\[scheduler\\]' --format='%at' -n1"
     stdout, stderr, rc = run_cmd(cmd)
     last_update_at = int(stdout) if stdout else 0
     epoch_time_now = int(time.time())
-    if epoch_time_now - last_update_at < config['tracking_repo_push_interval'] * 60 * 60:
+
+    # push job status when new excessive failure detected or push interval greater than configured threshold
+    if not new_excessive_run_failure and \
+       epoch_time_now - last_update_at < config['tracking_repo_push_interval'] * 60 * 60 - 300:  # allow 5 min offset
         return
 
     stdout, stderr, rc = run_cmd("git status")
     if 'working tree clean' in stdout:  # nothing to commit
+        msg = 'No job status change.'
+        print(msg)
+        send_notification(msg, 'INFO', config)
         return
+
+    status_summary = get_job_status_summary()
 
     cmd = "git add . && git commit -m '[scheduler] update job status' && git push"
 
@@ -122,9 +157,10 @@ def push_job_status(config):
         send_notification(error_msg, 'CRITICAL', config)
     else:
         print("Pushed latest job status on the scheduler branch.")
+        send_notification(status_summary, 'INFO', config)
 
 
-@retry(reraise=True, wait=wait_exponential(multiplier=1, min=20, max=80), stop=stop_after_attempt(4))
+@retry(reraise=True, wait=wait_random(min=5, max=15), stop=stop_after_attempt(3))
 def get_run_state(graphql_url, run_id, wes_token):
     graphql_query = {
         "operationName": "SINGLE_RUN_QUERY",
@@ -208,7 +244,9 @@ def update_queued_jobs(env, config, wes_token):
             elif 'ERROR' in run_info['state']:
                 new_state = 'failed'
         except Exception as ex:
-            print(f"{ex}\nSkipping update status for: {run_id}", file=sys.stderr)
+            message = f"{ex}\nSkipping update status for: {run_id}"
+            print(message, file=sys.stderr)
+            send_notification(message, 'CRITICAL', config)
 
         if new_state in ('completed', 'failed'):
             move_job_to_new_state(new_state, job_batch_path, current_job_path)
@@ -235,7 +273,7 @@ def get_studies_in_priority_order(studies):
     return studies_in_priority_order
 
 
-@retry(reraise=True, wait=wait_exponential(multiplier=1, min=20, max=80), stop=stop_after_attempt(4))
+@retry(reraise=True, wait=wait_random(min=5, max=15), stop=stop_after_attempt(3))
 def wes_submit_run(params, wes_url, wes_token, api_token, resume, workflow_url, workflow_version, nfs):
     # TODO: support resume request
 
@@ -299,7 +337,9 @@ def queue_new_jobs(available_slots, env, config, studies, wes_token):
         try:
             run_id = wes_submit_run(params, wes_url, wes_token, api_token, resume, workflow_url, workflow_version, nfs)
         except Exception as ex:
-            send_notification(ex, 'CRITICAL', config)
+            error_msg = f"Unable to launch new runs. {ex}"
+            send_notification(error_msg, 'CRITICAL', config)
+            sys.exit(error_msg)
 
         if run_id:  # submission was successful, now let's create run info file and move the job dir
             run_file = f'run.{int(time.time())}.{env}.{run_id}'
@@ -317,17 +357,82 @@ def queue_new_jobs(available_slots, env, config, studies, wes_token):
                 print(f"Queued job: {new_job_path}, run_id: {run_id}")
 
 
+def excessive_failure(env, config):
+    # detect excessive failure flag
+    flag_file = f"excessive_failure.{env}.txt"
+    if os.path.isfile(os.path.join(JOB_DIR, flag_file)):
+        error_msg = f"Excessive run failure flag exists: {flag_file}, skip scheduling new runs."
+        print(error_msg, file=sys.stderr)
+        send_notification(error_msg, 'CRITICAL', config)
+        return True
+
+    recently_scheduled_runs = []
+    recently_failed_runs = []
+    cmd = "git status jobs |grep run"
+    out, err, rc = run_cmd(cmd)
+    recently_scheduled_runs = out.split('\n') if out else []
+    if not recently_scheduled_runs:
+        return False
+
+    for run in recently_scheduled_runs:
+        # run_path, eg, jobs/CLLE-ES/2021-07-08/failed/job.0119/run.1625958035.rdpc_qa.wes-ce11613478634a3eb1129dd11e71f90e
+        run_path = run.split(' ')[-1]
+        if 'failed' in run_path:
+            recently_failed_runs.append(run_path.split('.')[-1])
+
+    if len(recently_failed_runs) >= config['compute_environments:'][env]['excessive_failure_threshold']:
+        with open(os.path.join(JOB_DIR, flag_file), 'w') as f:
+            f.write(
+                f"recently_failed_runs: [{', '.join(recently_failed_runs)}]\n"
+            )
+
+        error_msg = f"Excessive run failure detected: {recently_failed_runs} recently scheduled runs failed."
+        print(error_msg, file=sys.stderr)
+        send_notification(error_msg, 'CRITICAL', config)
+        return True
+
+    return False
+
+
 def schedule_jobs(env, config, studies):
     wes_token = get_wes_token(env, config)
     queued_job_count = update_queued_jobs(env, config, wes_token)
+
     available_slots = config['compute_environments'][env]['max_parallel_runs'] - queued_job_count
-    if available_slots:
+    if not excessive_failure(env, config) and available_slots:
         queue_new_jobs(available_slots, env, config, studies, wes_token)
 
 
 def send_notification(message, level, config):
-    print(f"'send_notification' to be implemented, but here is the message: {message}\n"
-          f"And notification level: {level}")
+    print(f"Slack notification:\nLevel: {level}\n{message}", file=sys.stderr)
+
+    envv = config['slack_notification']['ENV']['web_hook_url']
+    slack_hook_url = os.getenv(envv)
+    if not slack_hook_url:
+        print(f"Please set environment variable '{envv}' for Slack web hook url.", file=sys.stderr)
+        return
+
+    if level == 'CRITICAL':
+        emoji = ':fire:\n'
+    elif level == 'WARNING':
+        emoji = ':warning:\n'
+    elif level == 'INFO':
+        emoji = ':information_source:\n'
+    else:
+        emoji = ''
+
+    response = requests.post(
+        url=slack_hook_url,
+        json={
+            'username': 'scheduler',
+            'text': f"{emoji}{message}"
+        }
+    )
+
+    if response.status_code != 200:
+        print(f"Unable to send Slack notification. Error: {response.text}", file=sys.stderr)
+    else:
+        print("Slack notification sent.")
 
 
 def main(studies, config):
