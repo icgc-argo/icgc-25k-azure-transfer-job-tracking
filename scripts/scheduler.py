@@ -397,6 +397,8 @@ def excessive_failure(env, config):
 def env_paused(env):
     pause_flag_file = os.path.join(JOB_DIR, f"pause.{env}")
     if os.path.isfile(pause_flag_file):
+        message = f"Pause flag exists, skip scheduling new runs on compute environment '{env}'."
+        send_notification(message, 'INFO', config)
         return True
     else:
         return False
