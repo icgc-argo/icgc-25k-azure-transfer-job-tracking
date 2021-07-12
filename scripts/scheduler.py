@@ -394,12 +394,20 @@ def excessive_failure(env, config):
     return False
 
 
+def env_paused(env):
+    pause_flag_file = os.path.join(JOB_DIR, f"pause.{env}")
+    if os.path.isfile(pause_flag_file):
+        return True
+    else:
+        return False
+
+
 def schedule_jobs(env, config, studies):
     wes_token = get_wes_token(env, config)
     queued_job_count = update_queued_jobs(env, config, wes_token)
 
     available_slots = config['compute_environments'][env]['max_parallel_runs'] - queued_job_count
-    if not excessive_failure(env, config) and available_slots:
+    if not excessive_failure(env, config) and not env_paused(env) and available_slots:
         queue_new_jobs(available_slots, env, config, studies, wes_token)
 
 
