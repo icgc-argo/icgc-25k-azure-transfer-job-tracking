@@ -368,7 +368,7 @@ def excessive_failure(env, config):
 
     recently_scheduled_runs = []
     recently_failed_runs = []
-    cmd = "git status jobs |grep run"
+    cmd = "git status jobs |grep run ||true"
     out, err, rc = run_cmd(cmd)
     recently_scheduled_runs = out.split('\n') if out else []
     if not recently_scheduled_runs:
