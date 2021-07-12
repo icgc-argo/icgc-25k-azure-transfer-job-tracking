@@ -124,7 +124,7 @@ def get_job_status_summary():
 def push_job_status(config):
     # detect whether new excessive failure flag file created
     new_excessive_run_failure = False
-    cmd = "git add . && git status jobs | grep 'new file' | grep excessive_failure"
+    cmd = "git add . && git status jobs | grep 'new file' | grep excessive_failure ||true"
     stdout, stderr, rc = run_cmd(cmd)
     if 'excessive_failure' in stdout:
         new_excessive_run_failure = True
