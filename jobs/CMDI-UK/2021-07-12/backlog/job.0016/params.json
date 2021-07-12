@@ -1,0 +1,24 @@
+{
+  "_batch_id": "2021-07-12",
+  "_job_id": "job.0016",
+  "study_id": "CMDI-UK",
+  "analysis_id": [
+    "d00e2051-2a4d-43f0-95dd-451b96934819"
+  ],
+  "max_retries": 3,
+  "first_retry_wait_time": 60,
+  "cpus": 1,
+  "mem": 1,
+  "local_dir": "/icgc-argo-scratch",
+  "download_song_url": "https://song.cancercollaboratory.org",
+  "download_score_url": "https://storage.cancercollaboratory.org",
+  "download_cpus": 4,
+  "download_mem": 8,
+  "download_transport_mem": 2,
+  "upload_song_url": "https://song.azure.icgc.overture.bio",
+  "upload_score_url": "https://score.azure.icgc.overture.bio",
+  "upload_cpus": 4,
+  "upload_mem": 8,
+  "upload_transport_mem": 2,
+  "transport_mem": 2
+}
