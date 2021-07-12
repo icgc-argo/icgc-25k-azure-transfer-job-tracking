@@ -136,7 +136,7 @@ def push_job_status(config):
 
     # push job status when new excessive failure detected or push interval greater than configured threshold
     if not new_excessive_run_failure and \
-       epoch_time_now - last_update_at < config['tracking_repo_push_interval'] * 60 * 60 + 300:  # allow 5 min offset
+       epoch_time_now - last_update_at < config['tracking_repo_push_interval'] * 60 * 60 - 300:  # allow 5 min earlier to compensate push time variation
         return
 
     stdout, stderr, rc = run_cmd("git status")
