@@ -1,0 +1,33 @@
+{
+  "_batch_id": "2021-07-12",
+  "_job_id": "job.0507",
+  "study_id": "BRCA-UK",
+  "analysis_id": [
+    "3b5e2fef-ed0e-4bbb-abdd-3c146b86f7cf",
+    "4763ba36-4b6c-40e2-8cab-99977b8ef599",
+    "6b3ba0b9-a4c3-4a71-9747-8e1cfbee8fb4",
+    "70b8e01e-d7fe-4eb4-ac44-bceea4ce7fe3",
+    "878aba7c-be31-416e-ae26-068fa0854b3f",
+    "89fc47e5-bf9e-4fd6-8fd9-99747ae6c3e6",
+    "b1ed8066-1f39-4d4a-ac51-22bb288d84f2",
+    "d6c37dd8-fbe6-4e24-8cce-7de6a8bf64b7",
+    "eb11d252-d28d-11e5-b970-35255c6878de",
+    "efe4b468-6c24-4485-b74d-3a213b89fb42"
+  ],
+  "max_retries": 3,
+  "first_retry_wait_time": 60,
+  "cpus": 1,
+  "mem": 1,
+  "local_dir": "/icgc-argo-scratch",
+  "download_song_url": "https://song.cancercollaboratory.org",
+  "download_score_url": "https://storage.cancercollaboratory.org",
+  "download_cpus": 1,
+  "download_mem": 2,
+  "download_transport_mem": 2,
+  "upload_song_url": "https://song.azure.icgc.overture.bio",
+  "upload_score_url": "https://score.azure.icgc.overture.bio",
+  "upload_cpus": 1,
+  "upload_mem": 2,
+  "upload_transport_mem": 2,
+  "transport_mem": 2
+}
