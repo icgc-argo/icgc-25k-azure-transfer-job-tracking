@@ -336,6 +336,7 @@ def queue_new_jobs(available_slots, env, config, studies, wes_token):
         run_id = None
         try:
             run_id = wes_submit_run(params, wes_url, wes_token, api_token, resume, workflow_url, workflow_version, nfs)
+            time.sleep(5)  # pause for 5 seconds
         except Exception as ex:
             error_msg = f"Unable to launch new runs. {ex}"
             send_notification(error_msg, 'CRITICAL', config)
