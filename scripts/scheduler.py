@@ -355,7 +355,7 @@ def queue_new_jobs(available_slots, env, config, studies, wes_token):
                 send_notification(error_msg, 'CRITICAL', config)
                 sys.exit(error_msg)
             else:
-                print(f"Queued job: {new_job_path}, run_id: {run_id}")
+                print(f"Queued job: {new_job_path}, on: {env}, run_id: {run_id}")
 
 
 def excessive_failure(env, config):
