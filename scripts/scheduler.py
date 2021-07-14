@@ -200,7 +200,8 @@ def get_run_state(graphql_url, run_id, wes_token):
     response = requests.post(
         url=graphql_url,
         json=graphql_query,
-        headers={"Authorization": f"Bearer {wes_token}"}
+        headers={"Authorization": f"Bearer {wes_token}"},
+        timeout=10
     )
     if response.status_code != 200:
         raise Exception(f"Unable to retrieve run state for {run_id} from {graphql_url}")
@@ -292,7 +293,8 @@ def wes_submit_run(params, wes_url, wes_token, api_token, resume, workflow_url, 
     response = requests.post(
                         url=wes_url,
                         json=wes_post_body,
-                        headers={"Authorization": f"Bearer {wes_token}"}
+                        headers={"Authorization": f"Bearer {wes_token}"},
+                        timeout=10
                     )
 
     if response.status_code != 200:
@@ -437,7 +439,8 @@ def send_notification(message, level, config):
         json={
             'username': 'scheduler',
             'text': f"{emoji}{message}"
-        }
+        },
+        timeout=10
     )
 
     if response.status_code != 200:
