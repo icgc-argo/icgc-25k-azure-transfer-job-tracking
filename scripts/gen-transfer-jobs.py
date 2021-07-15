@@ -17,7 +17,6 @@ JOB_DIR = os.path.join(BASE_DIR, 'jobs')
 PAYLOAD_DIR = os.path.join(BASE_DIR, 'collab-song-payload-dumps')
 
 JOB_PARAMS = {
-    "_batch_id": None,
     "_job_id": None,
     "study_id": None,
     "analysis_id": [],
@@ -179,7 +178,6 @@ def main(study, job_count, config):
         i += 1
         job_id = 'job.' + (4 - len(str(i))) * '0' + str(i)
 
-        job['_batch_id'] = new_batch_id
         job['_job_id'] = job_id
         total_data_size = job.pop('_total_data_size')
         analysis_ids = job.pop('_analysis_ids')
