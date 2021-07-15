@@ -204,10 +204,14 @@ def get_run_state(graphql_url, run_id, wes_token):
         timeout=60
     )
     if response.status_code != 200:
-        raise Exception(f"Unable to retrieve run state for {run_id} from {graphql_url}")
+        raise Exception(f"Unable to retrieve run state for {run_id} from {graphql_url}. Status code: {response.status_code}")
 
     response_obj = json.loads(response.text)
-    return response_obj['data']['runs']['content'][0]
+    run_info = response_obj['data']['runs']['content']
+    if run_info:
+        return run_info[0]
+    else:
+        raise Exception(f"GraphQL response does not return run details for {run_id} from {graphql_url}. Status code: 200")
 
 
 def move_job_to_new_state(new_state, job_batch_path, current_job_path):
