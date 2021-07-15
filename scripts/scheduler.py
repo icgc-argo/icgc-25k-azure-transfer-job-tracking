@@ -225,8 +225,8 @@ def update_queued_jobs(env, config, wes_token):
     queued_runs = sorted(glob(queued_run_path))
     latest_run_per_job = dict()
     for run in queued_runs:
-        job_id = os.path.basename(os.path.dirname(run))
-        latest_run_per_job[job_id] = run
+        job_path = os.path.dirname(run)
+        latest_run_per_job[job_path] = run
 
     queued_run_count = 0
     for run in sorted(list(latest_run_per_job.values())):
@@ -384,11 +384,16 @@ def excessive_failure(env, config):
     if not recently_scheduled_runs:
         return False
 
-    for run in recently_scheduled_runs:
+    latest_run_per_job = dict()
+    for run in sorted(recently_scheduled_runs):
         # run_path, eg, jobs/CLLE-ES/2021-07-08/failed/job.0119/run.1625958035.rdpc_qa.wes-ce11613478634a3eb1129dd11e71f90e
         run_path = run.split(' ')[-1]
-        if 'failed' in run_path:
-            recently_failed_runs.append(run_path.split('.')[-1])
+        job_path = os.path.dirname(run_path)
+        latest_run_per_job[job_path] = run_path
+
+    for run_path in sorted(list(latest_run_per_job.values())):
+        if 'failed' in run_path and env == run_path.split('.')[-2]:
+            recently_failed_runs.append(os.path.basename(run_path))
 
     if len(recently_failed_runs) >= config['compute_environments'][env]['excessive_failure_threshold']:
         with open(os.path.join(JOB_DIR, flag_file), 'w') as f:
