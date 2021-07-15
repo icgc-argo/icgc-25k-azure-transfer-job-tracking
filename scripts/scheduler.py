@@ -230,12 +230,12 @@ def update_queued_jobs(env, config, wes_token):
 
     queued_run_count = 0
     for run in sorted(list(latest_run_per_job.values())):
-        study, batch_id, _, job_id, run_info = run.split(os.sep)[-5:]
-        run_env = run_info.split('.')[2]
+        study, batch_id, _, job_id, run_file = run.split(os.sep)[-5:]
+        run_env = run_file.split('.')[2]
         if run_env != env:  # skip if the run is not in the current env
             continue
 
-        run_id = run_info.split('.')[3]
+        run_id = run_file.split('.')[3]
         queued_run_count += 1
 
         job_batch_path = os.path.join(JOB_DIR, study, batch_id)
@@ -251,7 +251,7 @@ def update_queued_jobs(env, config, wes_token):
             elif 'ERROR' in run_info['state']:
                 new_state = 'failed'
         except Exception as ex:
-            message = f"{ex}\nSkipping update status for: {run_id}"
+            message = f"{ex}\nSkipping update status for: {run_file}"
             print(message, file=sys.stderr)
             send_notification(message, 'CRITICAL', config)
 
