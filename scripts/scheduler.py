@@ -221,16 +221,22 @@ def move_job_to_new_state(new_state, job_batch_path, current_job_path):
 
 
 def update_queued_jobs(env, config, wes_token):
-    queued_run_path = os.path.join(JOB_DIR, '*', '*', 'queued', 'job.*', f'run.*.{env}.wes-*')
+    queued_run_path = os.path.join(JOB_DIR, '*', '*', 'queued', 'job.*', f'run.*.*.wes-*')
     queued_runs = sorted(glob(queued_run_path))
     latest_run_per_job = dict()
     for run in queued_runs:
         job_id = os.path.basename(os.path.dirname(run))
         latest_run_per_job[job_id] = run
 
-    for run in list(latest_run_per_job.values()):
+    queued_run_count = 0
+    for run in sorted(list(latest_run_per_job.values())):
         study, batch_id, _, job_id, run_info = run.split(os.sep)[-5:]
+        run_env = run_info.split('.')[2]
+        if run_env != env:  # skip if the run is not in the current env
+            continue
+
         run_id = run_info.split('.')[3]
+        queued_run_count += 1
 
         job_batch_path = os.path.join(JOB_DIR, study, batch_id)
         current_job_path = os.path.dirname(run)
@@ -251,8 +257,9 @@ def update_queued_jobs(env, config, wes_token):
 
         if new_state in ('completed', 'failed'):
             move_job_to_new_state(new_state, job_batch_path, current_job_path)
+            queued_run_count -= 1
 
-    return len(set([os.path.dirname(r) for r in glob(queued_run_path)]))
+    return queued_run_count
 
 
 def get_studies_in_priority_order(studies):
