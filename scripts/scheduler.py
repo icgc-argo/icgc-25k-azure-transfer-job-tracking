@@ -424,7 +424,13 @@ def env_paused(env):
 
 
 def schedule_jobs(env, config, studies):
-    wes_token = get_wes_token(env, config)
+    wes_token = ""
+    try:
+        wes_token = get_wes_token(env, config)
+    except Exception as ex:
+        error_msg = f"Unable to get token for '{env}'. Error: {ex}"
+        send_notification(error_msg, 'CRITICAL', config)
+
     queued_job_count = update_queued_jobs(env, config, wes_token)
 
     available_slots = config['compute_environments'][env]['max_parallel_runs'] - queued_job_count
