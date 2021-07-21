@@ -46,7 +46,7 @@
 
 ## Tracking repo updates by admins
 ### Update to the `main` branch only
-  1. NEVER touch the `queued` directory which is used only by the `scheduler`
+  1. for normal operation, such as update config, scripts, generate new job params files, NEVER touch the `queued` directory which is used only by the `scheduler`
   2. before any update, update to the latest `scheduler` branch and merge into `main`:
      `git checkout scheduler && git pull && git checkout main && git merge scheduler`
   3. do any updates as necessary, eg, adding more jobs; move failed jobs to backlog for resume; then push
