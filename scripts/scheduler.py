@@ -351,9 +351,8 @@ def queue_new_jobs(available_slots, env, config, studies, wes_token):
             run_id = wes_submit_run(params, wes_url, wes_token, api_token, resume, workflow_url, workflow_version, nfs)
             time.sleep(5)  # pause for 5 seconds
         except Exception as ex:
-            error_msg = f"Unable to launch new runs. {ex}"
+            error_msg = f"Unable to launch new runs on '{env}'. {ex}"
             send_notification(error_msg, 'CRITICAL', config)
-            sys.exit(error_msg)
 
         if run_id:  # submission was successful, now let's create run info file and move the job dir
             run_file = f'run.{int(time.time())}.{env}.{run_id}'
