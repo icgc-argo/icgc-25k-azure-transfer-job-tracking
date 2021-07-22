@@ -1,0 +1,24 @@
+{
+  "_job_id": "job.0054",
+  "study_id": "ESAD-UK",
+  "analysis_id": [
+    "43ef1611-c7ba-4c40-b005-839dd68697b5",
+    "c58da370-3d18-4b97-aa62-9f7ef21700d2"
+  ],
+  "max_retries": 3,
+  "first_retry_wait_time": 60,
+  "cpus": 1,
+  "mem": 1,
+  "local_dir": "/icgc-argo-scratch",
+  "download_song_url": "https://song.cancercollaboratory.org",
+  "download_score_url": "https://storage.cancercollaboratory.org",
+  "download_cpus": 1,
+  "download_mem": 2,
+  "download_transport_mem": 2,
+  "upload_song_url": "https://song.azure.icgc.overture.bio",
+  "upload_score_url": "https://score.azure.icgc.overture.bio",
+  "upload_cpus": 1,
+  "upload_mem": 2,
+  "upload_transport_mem": 2,
+  "transport_mem": 2
+}
