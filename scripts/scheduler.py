@@ -252,7 +252,7 @@ def update_queued_jobs(env, config, wes_token):
             run_info = get_run_state(graphql_url, run_id, wes_token)
             if run_info['state'] == 'COMPLETE':
                 new_state = 'completed'
-            elif 'ERROR' in run_info['state']:
+            elif 'ERROR' in run_info['state'] or 'FAILED' in run_info['state']:
                 new_state = 'failed'
         except Exception as ex:
             message = f"{ex}\nSkipping update status for: {run_file}"
