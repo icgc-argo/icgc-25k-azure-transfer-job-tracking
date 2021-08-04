@@ -79,6 +79,8 @@ def pull_job_batches(config):
     stdout, stderr, rc = run_cmd(cmd)
     if rc:  # when error out, no need to continue
         print("Skip sync with main branch. Unable to retieve commit log for last job status update on the main branch", file=sys.stderr)
+        # we still need to make sure the current branch is 'scheduler'
+        stdout, stderr, rc = run_cmd('git checkout scheduler > /dev/null 2>&1 && ( git stash pop > /dev/null 2>&1 || true )')
         return
     main_last_update_at = int(stdout) if stdout else 0
 
