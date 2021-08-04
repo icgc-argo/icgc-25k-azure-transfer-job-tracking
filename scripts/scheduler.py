@@ -313,7 +313,12 @@ def wes_submit_run(params, wes_url, wes_token, api_token, resume, workflow_url, 
         print(message, file=sys.stderr)
         raise Exception(message)
     else:
-        return json.loads(response.text)['run_id']
+        try:
+            return json.loads(response.text)['run_id']
+        except Exception as ex:
+            message = f"Unable to load response text as JSON or 'run_id' field does not exist in the response. Exception is:\n{ex}\nResponse text is:\n{response.text}\n"
+            print(message, file=sys.stderr)
+            raise Exception(message)
 
 
 def queue_new_jobs(available_slots, env, config, studies, wes_token):
