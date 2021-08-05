@@ -268,9 +268,9 @@ def update_queued_jobs(env, config, wes_token):
     return queued_run_count
 
 
-def get_studies_in_priority_order(studies):
+def get_studies_in_priority_order(studies, exclude_studies):
     study_path_pattern = os.path.join(JOB_DIR, '*-*')
-    all_studies = [os.path.basename(s) for s in sorted(glob(study_path_pattern))]
+    all_studies = [os.path.basename(s) for s in sorted(glob(study_path_pattern)) if os.path.basename(s) not in exclude_studies]
 
     studies_in_priority_order = []
     for s in studies:
@@ -323,10 +323,10 @@ def wes_submit_run(params, wes_url, wes_token, api_token, resume, workflow_url, 
             raise Exception(message)
 
 
-def queue_new_jobs(available_slots, env, config, studies, wes_token):
+def queue_new_jobs(available_slots, env, config, studies, wes_token, exclude_studies):
     jobs_to_queue = []
 
-    studies_in_priority_order = get_studies_in_priority_order(studies)
+    studies_in_priority_order = get_studies_in_priority_order(studies, exclude_studies)
     for study in studies_in_priority_order:
         current_available_slots = available_slots - len(jobs_to_queue)
         if current_available_slots <= 0:
@@ -429,7 +429,7 @@ def env_paused(env):
         return False
 
 
-def schedule_jobs(env, config, studies):
+def schedule_jobs(env, config, studies, exclude_studies):
     wes_token = ""
     try:
         wes_token = get_wes_token(env, config)
@@ -441,7 +441,7 @@ def schedule_jobs(env, config, studies):
 
     available_slots = config['compute_environments'][env]['max_parallel_runs'] - queued_job_count
     if not excessive_failure(env, config) and not env_paused(env) and available_slots:
-        queue_new_jobs(available_slots, env, config, studies, wes_token)
+        queue_new_jobs(available_slots, env, config, studies, wes_token, exclude_studies)
 
 
 def send_notification(message, level, config):
@@ -477,11 +477,11 @@ def send_notification(message, level, config):
         print("Slack notification sent.")
 
 
-def main(studies, config):
+def main(studies, config, exclude_studies):
     pull_job_batches(config)
 
     for env in config['compute_environments']:
-        schedule_jobs(env, config, studies)
+        schedule_jobs(env, config, studies, exclude_studies)
 
     push_job_status(config)
 
@@ -493,11 +493,14 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='ICGC 25k data Azure transfer job generator')
     parser.add_argument('-s', '--studies', type=str, nargs='+',
                         help='SONG studies for preferred priority order')
+    parser.add_argument('-x', '--exclude-studies', type=str, nargs='+',
+                        help='SONG studies to be excluded')
     args = parser.parse_args()
 
     with open(CONFIG_FILE) as f:
         config = yaml.safe_load(f)
 
     studies = args.studies if args.studies else []
+    exclude_studies = args.exclude_studies if args.exclude_studies else []
 
-    main(studies, config)
+    main(studies, config, exclude_studies)
