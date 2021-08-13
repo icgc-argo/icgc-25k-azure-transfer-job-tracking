@@ -288,7 +288,7 @@ def get_studies_in_priority_order(studies, exclude_studies):
 
 
 @retry(reraise=True, wait=wait_random(min=5, max=15), stop=stop_after_attempt(1))
-def wes_submit_run(params, wes_url, wes_token, api_token, resume, workflow_url, workflow_version, nfs):
+def wes_submit_run(params, wes_url, wes_token, api_token, resume, workflow_url, workflow_version, nfs, offline):
     # TODO: support resume request
 
     params['api_token'] = api_token
@@ -297,6 +297,7 @@ def wes_submit_run(params, wes_url, wes_token, api_token, resume, workflow_url, 
         "workflow_params": params,
         "workflow_engine_params": {
             "revision": workflow_version,
+            "offline": True if offline else False,
             "project_dir": f"{nfs}/{workflow_version}",
             "launch_dir": f"{nfs}/wfuser/{workflow_version}",
             "work_dir": f"{nfs}/wfuser/{workflow_version}/work"
@@ -345,6 +346,7 @@ def queue_new_jobs(available_slots, env, config, studies, wes_token, exclude_stu
     wes_url = config['compute_environments'][env]['wes_url']
     workflow_url = config['workflow']['url']
     workflow_version = config['workflow']['version']
+    offline = config['workflow'].get('offline')
     api_token = os.environ.get(config['compute_environments'][env]['ENV']['api_token'])
 
     # now queue and move the job one-by-one
@@ -355,7 +357,7 @@ def queue_new_jobs(available_slots, env, config, studies, wes_token, exclude_stu
         params = json.load(open(os.path.join(job, 'params.json'), 'r'))
         run_id = None
         try:
-            run_id = wes_submit_run(params, wes_url, wes_token, api_token, resume, workflow_url, workflow_version, nfs)
+            run_id = wes_submit_run(params, wes_url, wes_token, api_token, resume, workflow_url, workflow_version, nfs, offline)
             time.sleep(5)  # pause for 5 seconds
         except Exception as ex:
             error_msg = f"Unable to launch new runs on '{env}'. {ex}"
