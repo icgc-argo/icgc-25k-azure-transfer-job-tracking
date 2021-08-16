@@ -1,0 +1,27 @@
+{
+  "_job_id": "job.0043",
+  "study_id": "RECA-EU",
+  "analysis_id": [
+    "3f7caec5-c941-4686-bcea-899123478934",
+    "60ad02cf-ea21-48c5-81ec-a9a22b469285",
+    "9ca97350-971e-45ce-9060-5b0ee6381e8a",
+    "EGAZ00001316901",
+    "ef26a15b-e815-40ff-b320-f6bded3c592a"
+  ],
+  "max_retries": 3,
+  "first_retry_wait_time": 60,
+  "cpus": 1,
+  "mem": 1,
+  "local_dir": "/icgc-argo-scratch",
+  "download_song_url": "https://song.cancercollaboratory.org",
+  "download_score_url": "https://storage.cancercollaboratory.org",
+  "download_cpus": 1,
+  "download_mem": 2,
+  "download_transport_mem": 2,
+  "upload_song_url": "https://song.azure.icgc.overture.bio",
+  "upload_score_url": "https://score.azure.icgc.overture.bio",
+  "upload_cpus": 1,
+  "upload_mem": 2,
+  "upload_transport_mem": 2,
+  "transport_mem": 2
+}
