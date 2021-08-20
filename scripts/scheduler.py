@@ -289,7 +289,7 @@ def get_studies_in_priority_order(studies, exclude_studies):
 
 @retry(reraise=True, wait=wait_random(min=5, max=15), stop=stop_after_attempt(1))
 def wes_submit_run(params, wes_url, wes_token, api_token, resume, workflow_url, workflow_version, nfs, offline):
-    # TODO: support resume request
+    # support resume request
 
     params['api_token'] = api_token
     wes_post_body = {
@@ -303,6 +303,9 @@ def wes_submit_run(params, wes_url, wes_token, api_token, resume, workflow_url, 
             "work_dir": f"{nfs}/wfuser/{workflow_version}/work"
         }
     }
+
+    if resume:
+      wes_post_body['workflow_engine_params']['resume'] = resume
 
     response = requests.post(
                         url=wes_url,
@@ -351,8 +354,24 @@ def queue_new_jobs(available_slots, env, config, studies, wes_token, exclude_stu
 
     # now queue and move the job one-by-one
     for job in jobs_to_queue:
-        # TODO: support resume, detect whether run info file exists, if so get session id
+        # support resume, detect whether run info file exists, if so get session id
         resume = False  # set resume to the session id, set to None for now
+
+        exist_run_path = os.path.join(job, f'run.*.{env}.wes-*')
+        exist_runs = sorted(glob(exist_run_path))
+        if exist_runs:
+          run_file = os.path.basename(exist_runs[-1])
+          latest_run_id = run_file.split('.')[-1]
+          graphql_url = config['compute_environments'][env]['graphql_url']
+          try:
+              run_info = get_run_state(graphql_url, latest_run_id, wes_token)
+              resume = run_info['sessionId'] if run_info.get('sessionId') else False
+              
+          except Exception as ex:
+              message = f"{ex}\nCan not get sessionId for: {run_file}"
+              print(message, file=sys.stderr)
+              send_notification(message, 'CRITICAL', config)
+              continue
 
         params = json.load(open(os.path.join(job, 'params.json'), 'r'))
         run_id = None
