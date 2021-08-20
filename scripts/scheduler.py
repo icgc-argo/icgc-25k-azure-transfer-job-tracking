@@ -355,23 +355,22 @@ def queue_new_jobs(available_slots, env, config, studies, wes_token, exclude_stu
     # now queue and move the job one-by-one
     for job in jobs_to_queue:
         # support resume, detect whether run info file exists, if so get session id
-        exist_run_path = os.path.join(job, f'run.*.*.wes-*')
+        resume = False  # set resume to the session id, set to None for now
+
+        exist_run_path = os.path.join(job, f'run.*.{env}.wes-*')
         exist_runs = sorted(glob(exist_run_path))
         if exist_runs:
           run_file = os.path.basename(exist_runs[-1])
-          latest_env, latest_run_id = run_file.split('.')[-2:]
-          graphql_url = config['compute_environments'][latest_env]['graphql_url']
+          latest_run_id = run_file.split('.')[-1]
+          graphql_url = config['compute_environments'][env]['graphql_url']
           try:
               run_info = get_run_state(graphql_url, latest_run_id, wes_token)
-              resume = run_info['sessionId']
+              resume = run_info['sessionId'] if run_info.get('sessionId') else False
               
           except Exception as ex:
               message = f"{ex}\nCan not get sessionId for: {run_file}"
               print(message, file=sys.stderr)
               send_notification(message, 'CRITICAL', config)
-
-        else:
-          resume = False
 
         params = json.load(open(os.path.join(job, 'params.json'), 'r'))
         run_id = None
