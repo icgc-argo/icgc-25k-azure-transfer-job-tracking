@@ -371,6 +371,7 @@ def queue_new_jobs(available_slots, env, config, studies, wes_token, exclude_stu
               message = f"{ex}\nCan not get sessionId for: {run_file}"
               print(message, file=sys.stderr)
               send_notification(message, 'CRITICAL', config)
+              continue
 
         params = json.load(open(os.path.join(job, 'params.json'), 'r'))
         run_id = None
