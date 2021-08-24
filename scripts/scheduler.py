@@ -339,11 +339,19 @@ def queue_new_jobs(available_slots, env, config, studies, wes_token, exclude_stu
         # find backlog jobs for study
         backlog_job_path = os.path.join(JOB_DIR, study, '*', 'backlog', 'job.*')
         backlog_jobs = sorted(glob(backlog_job_path))
-
-        if len(backlog_jobs) > current_available_slots:
-            jobs_to_queue += backlog_jobs[:current_available_slots]
-        else:
-            jobs_to_queue += backlog_jobs
+        
+        for job_path in backlog_jobs:
+          exist_run_path = os.path.join(job_path, f'run.*.*.wes-*')
+          exist_runs = sorted(glob(exist_run_path))
+          # has failed run
+          if exist_runs:              
+            run_file = os.path.basename(exist_runs[-1])
+            latest_env, latest_run_id = run_file.split('.')[-2:]
+            if not latest_env == env: continue
+          jobs_to_queue += job_path
+          current_available_slots -= 1
+          if current_available_slots <= 0:
+            break
 
     nfs = random.choice(config['compute_environments'][env]['nfs_root_paths'])
     wes_url = config['compute_environments'][env]['wes_url']
@@ -357,12 +365,11 @@ def queue_new_jobs(available_slots, env, config, studies, wes_token, exclude_stu
         # support resume, detect whether run info file exists, if so get session id
         resume = False  # set resume to the session id, set to None for now
 
-        exist_run_path = os.path.join(job, f'run.*.*.wes-*')
+        exist_run_path = os.path.join(job, f'run.*.{env}.wes-*')
         exist_runs = sorted(glob(exist_run_path))
         if exist_runs:
           run_file = os.path.basename(exist_runs[-1])
-          latest_env, latest_run_id = run_file.split('.')[-2:]
-          if not latest_env == env: continue
+          latest_run_id = run_file.split('.')[-1]
           graphql_url = config['compute_environments'][env]['graphql_url']
           try:
               run_info = get_run_state(graphql_url, latest_run_id, wes_token)
