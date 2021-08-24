@@ -288,7 +288,7 @@ def get_studies_in_priority_order(studies, exclude_studies):
 
 
 @retry(reraise=True, wait=wait_random(min=5, max=15), stop=stop_after_attempt(1))
-def wes_submit_run(params, wes_url, wes_token, api_token, resume, workflow_url, workflow_version, nfs, offline):
+def wes_submit_run(params, wes_url, wes_token, api_token, resume, workflow_url, workflow_version, nfs, offline, work_dir):
     # support resume request
 
     params['api_token'] = api_token
@@ -300,7 +300,7 @@ def wes_submit_run(params, wes_url, wes_token, api_token, resume, workflow_url, 
             "offline": True if offline else False,
             "project_dir": f"{nfs}/{workflow_version}",
             "launch_dir": f"{nfs}/wfuser/{workflow_version}",
-            "work_dir": f"{nfs}/wfuser/{workflow_version}/work"
+            "work_dir": f"{nfs}/wfuser/{workflow_version}/work" if not work_dir else work_dir
         }
     }
 
@@ -364,6 +364,7 @@ def queue_new_jobs(available_slots, env, config, studies, wes_token, exclude_stu
     for job in jobs_to_queue:
         # support resume, detect whether run info file exists, if so get session id
         resume = False  # set resume to the session id, set to None for now
+        work_dir = None
 
         exist_run_path = os.path.join(job, f'run.*.{env}.wes-*')
         exist_runs = sorted(glob(exist_run_path))
@@ -374,6 +375,7 @@ def queue_new_jobs(available_slots, env, config, studies, wes_token, exclude_stu
           try:
               run_info = get_run_state(graphql_url, latest_run_id, wes_token)
               resume = run_info['sessionId'] if run_info.get('sessionId') else False
+              work_dir = run_info['engineParameters']['workDir']
               
           except Exception as ex:
               message = f"{ex}\nCan not get sessionId for: {run_file}"
@@ -384,7 +386,7 @@ def queue_new_jobs(available_slots, env, config, studies, wes_token, exclude_stu
         params = json.load(open(os.path.join(job, 'params.json'), 'r'))
         run_id = None
         try:
-            run_id = wes_submit_run(params, wes_url, wes_token, api_token, resume, workflow_url, workflow_version, nfs, offline)
+            run_id = wes_submit_run(params, wes_url, wes_token, api_token, resume, workflow_url, workflow_version, nfs, offline, work_dir)
             time.sleep(5)  # pause for 5 seconds
         except Exception as ex:
             error_msg = f"Unable to launch new runs on '{env}'. {ex}"
