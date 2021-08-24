@@ -288,7 +288,7 @@ def get_studies_in_priority_order(studies, exclude_studies):
 
 
 @retry(reraise=True, wait=wait_random(min=5, max=15), stop=stop_after_attempt(1))
-def wes_submit_run(params, wes_url, wes_token, api_token, resume, workflow_url, workflow_version, nfs, offline):
+def wes_submit_run(params, wes_url, wes_token, api_token, resume, workflow_url, workflow_version, nfs, offline, work_dir, launch_dir):
     # support resume request
 
     params['api_token'] = api_token
@@ -299,8 +299,8 @@ def wes_submit_run(params, wes_url, wes_token, api_token, resume, workflow_url, 
             "revision": workflow_version,
             "offline": True if offline else False,
             "project_dir": f"{nfs}/{workflow_version}",
-            "launch_dir": f"{nfs}/wfuser/{workflow_version}",
-            "work_dir": f"{nfs}/wfuser/{workflow_version}/work"
+            "launch_dir": f"{nfs}/wfuser/{workflow_version}" if not launch_dir else launch_dir,
+            "work_dir": f"{nfs}/wfuser/{workflow_version}/work" if not work_dir else work_dir
         }
     }
 
@@ -339,11 +339,19 @@ def queue_new_jobs(available_slots, env, config, studies, wes_token, exclude_stu
         # find backlog jobs for study
         backlog_job_path = os.path.join(JOB_DIR, study, '*', 'backlog', 'job.*')
         backlog_jobs = sorted(glob(backlog_job_path))
-
-        if len(backlog_jobs) > current_available_slots:
-            jobs_to_queue += backlog_jobs[:current_available_slots]
-        else:
-            jobs_to_queue += backlog_jobs
+        
+        for job_path in backlog_jobs:
+          exist_run_path = os.path.join(job_path, f'run.*.*.wes-*')
+          exist_runs = sorted(glob(exist_run_path))
+          # has failed run
+          if exist_runs:              
+            run_file = os.path.basename(exist_runs[-1])
+            latest_env, latest_run_id = run_file.split('.')[-2:]
+            if not latest_env == env: continue
+          jobs_to_queue += job_path
+          current_available_slots -= 1
+          if current_available_slots <= 0:
+            break
 
     nfs = random.choice(config['compute_environments'][env]['nfs_root_paths'])
     wes_url = config['compute_environments'][env]['wes_url']
@@ -356,17 +364,20 @@ def queue_new_jobs(available_slots, env, config, studies, wes_token, exclude_stu
     for job in jobs_to_queue:
         # support resume, detect whether run info file exists, if so get session id
         resume = False  # set resume to the session id, set to None for now
+        work_dir = None
+        launch_dir = None
 
-        exist_run_path = os.path.join(job, f'run.*.*.wes-*')
+        exist_run_path = os.path.join(job, f'run.*.{env}.wes-*')
         exist_runs = sorted(glob(exist_run_path))
         if exist_runs:
           run_file = os.path.basename(exist_runs[-1])
-          latest_env, latest_run_id = run_file.split('.')[-2:]
-          if not latest_env == env: continue
+          latest_run_id = run_file.split('.')[-1]
           graphql_url = config['compute_environments'][env]['graphql_url']
           try:
               run_info = get_run_state(graphql_url, latest_run_id, wes_token)
               resume = run_info['sessionId'] if run_info.get('sessionId') else False
+              work_dir = run_info['engineParameters']['workDir']
+              launch_dir = run_info['engineParameters']['launchDir']
               
           except Exception as ex:
               message = f"{ex}\nCan not get sessionId for: {run_file}"
@@ -377,7 +388,7 @@ def queue_new_jobs(available_slots, env, config, studies, wes_token, exclude_stu
         params = json.load(open(os.path.join(job, 'params.json'), 'r'))
         run_id = None
         try:
-            run_id = wes_submit_run(params, wes_url, wes_token, api_token, resume, workflow_url, workflow_version, nfs, offline)
+            run_id = wes_submit_run(params, wes_url, wes_token, api_token, resume, workflow_url, workflow_version, nfs, offline, work_dir, launch_dir)
             time.sleep(5)  # pause for 5 seconds
         except Exception as ex:
             error_msg = f"Unable to launch new runs on '{env}'. {ex}"
