@@ -14,6 +14,7 @@ from glob import glob
 from tenacity import retry, wait_random, stop_after_attempt
 from oauthlib.oauth2 import BackendApplicationClient
 from requests_oauthlib import OAuth2Session
+import re
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 JOB_DIR = os.path.join(BASE_DIR, 'jobs')
@@ -375,9 +376,12 @@ def queue_new_jobs(available_slots, env, config, studies, wes_token, exclude_stu
           graphql_url = config['compute_environments'][env]['graphql_url']
           try:
               run_info = get_run_state(graphql_url, latest_run_id, wes_token)
-              resume = run_info['sessionId'] if run_info.get('sessionId') else False
-              work_dir = run_info['engineParameters']['workDir']
-              launch_dir = run_info['engineParameters']['launchDir']
+              if run_info.get('sessionId') and re.match("^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$", run_info.get('sessionId')):
+                resume = run_info['sessionId']
+              if run_info['engineParameters'].get('workDir'):
+                work_dir = run_info['engineParameters']['workDir']
+              if run_info['engineParameters'].get('launchDir'):
+                launch_dir = run_info['engineParameters']['launchDir']
               
           except Exception as ex:
               message = f"{ex}\nCan not get sessionId for: {run_file}"
