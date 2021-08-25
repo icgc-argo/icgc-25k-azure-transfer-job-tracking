@@ -378,16 +378,20 @@ def queue_new_jobs(available_slots, env, config, studies, wes_token, exclude_stu
               run_info = get_run_state(graphql_url, latest_run_id, wes_token)
               if run_info.get('sessionId') and re.match("^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$", run_info.get('sessionId')):
                 resume = run_info['sessionId']
-              if run_info['engineParameters'].get('workDir'):
+              if resume and run_info['engineParameters'].get('workDir'):
                 work_dir = run_info['engineParameters']['workDir']
-              if run_info['engineParameters'].get('launchDir'):
+              if resume and run_info['engineParameters'].get('launchDir'):
                 launch_dir = run_info['engineParameters']['launchDir']
               
           except Exception as ex:
-              message = f"{ex}\nCan not get sessionId for: {run_file}"
-              print(message, file=sys.stderr)
-              send_notification(message, 'CRITICAL', config)
-              continue
+              if "Status code: 200" in ex:
+                  message = f"{ex}\n{run_file} did NOT launch successfully, will kick off a new run!"
+                  print(message, file=sys.stderr)
+
+              else:
+                  message = f"{ex}\nCan not get sessionId for: {run_file}, will skip resume run!"
+                  send_notification(message, 'CRITICAL', config)
+                  continue
 
         params = json.load(open(os.path.join(job, 'params.json'), 'r'))
         run_id = None
