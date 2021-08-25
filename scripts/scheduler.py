@@ -349,7 +349,7 @@ def queue_new_jobs(available_slots, env, config, studies, wes_token, exclude_stu
             run_file = os.path.basename(exist_runs[-1])
             latest_env, latest_run_id = run_file.split('.')[-2:]
             if not latest_env == env: continue
-          jobs_to_queue += job_path
+          jobs_to_queue.append(job_path)
           current_available_slots -= 1
           if current_available_slots <= 0:
             break
